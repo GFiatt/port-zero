@@ -10,13 +10,16 @@ function resetGame() {
   currentWave = 1;
   betweenWaves = false;
   betweenWaveTimer = 0;
+
+  // cola de spawn y temporizador (globales, sin let/const)
   spawnQueue = [];
   enemySpawnTimer = 0;
+
   spawnWave(currentWave);
   currentState = GAME_STATE.PLAYING;
 }
 
-// En vez de spawnear de una vez, llenamos la cola
+// Mete tipos de enemigo en la cola para spawnearlos poco a poco
 function spawnEnemiesOfType(typeDef, count) {
   for (let i = 0; i < count; i++) {
     spawnQueue.push(typeDef);
@@ -24,10 +27,9 @@ function spawnEnemiesOfType(typeDef, count) {
 }
 
 function spawnWave(waveNumber) {
+  // limpiar pickups de la oleada anterior
   ammoPickups = [];
   healthPickups = [];
-  spawnQueue = [];
-  enemySpawnTimer = 0;
 
   const total =
     GAME_CONFIG.waveBaseEnemies +
@@ -35,31 +37,39 @@ function spawnWave(waveNumber) {
 
   let remaining = total;
 
+  // DEVIL: desde wave 10, 1, 2, 3... por wave (limitado a la mitad del total)
   let numDevils = 0;
   if (waveNumber >= 10) {
-    numDevils = waveNumber - 9; // 10->1, 11->2, ...
+    numDevils = waveNumber - 9; // 10→1, 11→2...
     numDevils = Math.min(numDevils, Math.floor(total / 2));
     remaining -= numDevils;
   }
 
+  // TYPE3: desde wave 5
   let numType3 = 0;
   if (waveNumber >= 5 && remaining > 0) {
     numType3 = Math.max(1, Math.floor(remaining * 0.3));
     remaining -= numType3;
   }
 
+  // TYPE2: desde wave 2
   let numType2 = 0;
   if (waveNumber >= 2 && remaining > 0) {
     numType2 = Math.max(1, Math.floor(remaining * 0.4));
     remaining -= numType2;
   }
 
+  // TYPE1: lo que quede
   const numType1 = remaining;
 
+  // Vaciar cola y llenarla con los enemigos de esta wave
+  spawnQueue = [];
   spawnEnemiesOfType(ENEMY_TYPES.TYPE1, numType1);
   spawnEnemiesOfType(ENEMY_TYPES.TYPE2, numType2);
   spawnEnemiesOfType(ENEMY_TYPES.TYPE3, numType3);
   spawnEnemiesOfType(ENEMY_TYPES.DEVIL, numDevils);
+
+  enemySpawnTimer = 0;
 }
 
 function maybeSpawnDrops(x, y) {

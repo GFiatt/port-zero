@@ -9,9 +9,12 @@ const GAME_STATE = {
   GAME_OVER: 'game_over',
 };
 
+// -------------------------------
+// Constantes de juego
+// -------------------------------
 const GAME_CONFIG = {
   playerSpeed: 220,
-  playerRadius: 18,
+  playerRadius: 22,          // <- un poco más grande, acorde al sprite escalado
   playerMaxHealth: 100,
   bulletSpeed: 600,
   bulletRadius: 4,
@@ -32,11 +35,40 @@ const GAME_CONFIG = {
   ammoDropAmount: 12,
   healthDropChance: 0.15,
   healthDropAmount: 30,
-
-  // spawn progresivo
-  enemySpawnIntervalBase: 0.7, // segundos entre spawns al inicio
-  enemySpawnIntervalMin: 0.25, // mínimo
+  enemySpawnIntervalBase: 1.0, // segundos entre enemigos al inicio
+  enemySpawnIntervalMin: 0.25, // límite mínimo de intervalo
 };
+
+// -------------------------------
+// Sprites
+// -------------------------------
+const SPRITE_CONFIG = {
+  player: {
+    src: '/client/assets/devilSpriteSheet.png',
+
+    // Cada celda del spritesheet
+    frameWidth: 123,
+    frameHeight: 123,
+    sheetCols: 3,
+    sheetRows: 3,
+
+    // Escala en pantalla (ajusta a gusto)
+    scale: 0.32,       // más pequeño que antes
+    animSpeed: 8,      // frames por segundo al caminar
+
+    // Índices de frame (row-major: row * sheetCols + col)
+    // 0: (0,0)  1: (0,1)  2: (0,2)
+    // 3: (1,0)  4: (1,1)  5: (1,2)
+    // 6: (2,0)  7: (2,1)  8: (2,2)
+    frames: {
+      down:  [0, 1],   // mirando hacia abajo
+      right: [4, 5],   // derecha
+      up:    [6, 7],   // espalda (ajusta si quieres otros)
+      left:  [2, 3],   // izquierda
+    },
+  },
+};
+
 
 const ENEMY_TYPES = {
   TYPE1: {

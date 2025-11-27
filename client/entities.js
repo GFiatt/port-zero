@@ -2,19 +2,31 @@
 
 class Player {
   constructor(x, y) {
+    const cfg = SPRITE_CONFIG.player;
+
     this.x = x;
     this.y = y;
     this.radius = GAME_CONFIG.playerRadius;
     this.speed = GAME_CONFIG.playerSpeed;
     this.angle = 0;
+
     this.maxHealth = GAME_CONFIG.playerMaxHealth;
     this.health = this.maxHealth;
+
     this.magSize = GAME_CONFIG.magSize;
     this.ammo = this.magSize;
     this.reserveAmmo = GAME_CONFIG.initialReserveAmmo;
     this.isReloading = false;
     this.reloadTimer = 0;
     this.timeSinceLastShot = 0;
+
+    // Animación
+    this.animFrame = 0;
+    this.animTimer = 0;
+    this.animFrameCount = cfg.frames.down.length; // 2 frames por dirección
+    // 0=down, 1=left, 2=right, 3=up
+    this.animFacing = 0;
+    this.isMoving = false;
   }
 
   update(dt) {
@@ -33,8 +45,20 @@ class Player {
 
       this.x += dx * this.speed * dt;
       this.y += dy * this.speed * dt;
+
+      this.isMoving = true;
+
+      // decidir hacia dónde mira según movimiento
+      if (Math.abs(dx) > Math.abs(dy)) {
+        this.animFacing = dx > 0 ? 2 : 1; // derecha / izquierda
+      } else {
+        this.animFacing = dy > 0 ? 0 : 3; // abajo / arriba
+      }
+    } else {
+      this.isMoving = false;
     }
 
+    // límites y colisiones con paredes
     this.x = clamp(this.x, this.radius, canvas.width - this.radius);
     this.y = clamp(this.y, this.radius, canvas.height - this.radius);
 
@@ -42,12 +66,15 @@ class Player {
       resolveCircleRectCollision(this, wall);
     }
 
+    // apuntar al mouse
     const mx = mousePos.x;
     const my = mousePos.y;
     this.angle = Math.atan2(my - this.y, mx - this.x);
 
+    // timers
     this.timeSinceLastShot += dt;
 
+    // recarga
     if (this.isReloading) {
       this.reloadTimer += dt;
       if (this.reloadTimer >= GAME_CONFIG.reloadTime) {
@@ -65,7 +92,10 @@ class Player {
     if (this.ammo === 0 && !this.isReloading && this.reserveAmmo > 0) {
       this.startReload();
     }
+
+    this.updateAnimation(dt);
   }
+
 
   tryShoot() {
     if (this.isReloading) return;
@@ -96,6 +126,30 @@ class Player {
     this.isReloading = true;
     this.reloadTimer = 0;
   }
+
+  updateAnimation(dt) {
+    const cfg = SPRITE_CONFIG.player;
+
+    if (!this.isMoving) {
+      this.animFrame = 0;
+      this.animTimer = 0;
+      return;
+    }
+
+    const frameDuration = 1 / cfg.animSpeed;
+    this.animTimer += dt;
+
+    const facingNames = ['down', 'left', 'right', 'up'];
+    const dirName = facingNames[this.animFacing] || 'down';
+    const frames = cfg.frames[dirName];
+    const frameCount = frames.length;
+
+    while (this.animTimer >= frameDuration) {
+      this.animTimer -= frameDuration;
+      this.animFrame = (this.animFrame + 1) % frameCount;
+    }
+  }
+
 }
 
 class Bullet {

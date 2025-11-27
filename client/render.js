@@ -58,21 +58,49 @@ function drawHealthPickups() {
 function drawPlayer() {
   if (!player) return;
 
-  ctx.fillStyle = '#22c55e';
-  ctx.beginPath();
-  ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
-  ctx.fill();
+  // Si todavía no cargó el sprite, dibujamos el círculo verde como fallback
+  if (!playerSpriteImage) {
+    ctx.fillStyle = '#22c55e';
+    ctx.beginPath();
+    ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+    ctx.fill();
+    return;
+  }
 
-  ctx.strokeStyle = '#bbf7d0';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(player.x, player.y);
-  ctx.lineTo(
-    player.x + Math.cos(player.angle) * (player.radius + 10),
-    player.y + Math.sin(player.angle) * (player.radius + 10)
+  const cfg = SPRITE_CONFIG.player;
+  const fw = cfg.frameWidth;
+  const fh = cfg.frameHeight;
+  const cols = cfg.sheetCols;
+  const scale = cfg.scale;
+
+  // Elegimos el arreglo de frames según hacia dónde mira
+  let dirFrames = cfg.frames.down;
+  switch (player.animFacing) {
+    case 1: dirFrames = cfg.frames.left;  break;
+    case 2: dirFrames = cfg.frames.right; break;
+    case 3: dirFrames = cfg.frames.up;    break;
+    default: dirFrames = cfg.frames.down; break;
+  }
+
+  const animFrames = dirFrames;
+  const frameIndex = animFrames[player.animFrame % animFrames.length];
+
+  const sx = (frameIndex % cols) * fw;
+  const sy = Math.floor(frameIndex / cols) * fh;
+
+  const dw = fw * scale;
+  const dh = fh * scale;
+
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.drawImage(
+    playerSpriteImage,
+    sx, sy, fw, fh,
+    -dw / 2, -dh / 2, dw, dh
   );
-  ctx.stroke();
+  ctx.restore();
 }
+
 
 function drawBullets() {
   ctx.fillStyle = '#facc15';

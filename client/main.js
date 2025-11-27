@@ -1,11 +1,15 @@
-// Loop principal + socket opcional
+// main.js
+// Game loop + conexión socket
 
-let socket = null;
-try {
-  // puede fallar si socket.io no está disponible, pero no rompe el juego
-  socket = io();
-} catch (err) {
-  console.warn('Socket.io no disponible (no es crítico).');
+const socket = io();
+
+// arranca el loop cuando todo está listo
+function startGameLoop() {
+  // aseguramos que lastTime tenga algún valor inicial
+  if (typeof lastTime === 'undefined') {
+    window.lastTime = performance.now();
+  }
+  requestAnimationFrame(gameLoop);
 }
 
 function gameLoop(timestamp) {
@@ -18,14 +22,27 @@ function gameLoop(timestamp) {
   requestAnimationFrame(gameLoop);
 }
 
-requestAnimationFrame(gameLoop);
-
-if (socket) {
-  socket.on('connect', () => {
-    console.log('Connected to server as', socket.id);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('Disconnected from server');
-  });
+// Cargar assets primero (sprites)
+if (typeof loadAssets === 'function') {
+  loadAssets()
+    .then(() => {
+      console.log('Assets loaded, starting game loop');
+      startGameLoop();
+    })
+    .catch((err) => {
+      console.error('Error loading assets, starting anyway:', err);
+      startGameLoop();
+    });
+} else {
+  // por si algún día quitas assets.js
+  startGameLoop();
 }
+
+// Logs básicos de socket.io
+socket.on('connect', () => {
+  console.log('Connected to server as', socket.id);
+});
+
+socket.on('disconnect', () => {
+  console.log('Disconnected from server');
+});
