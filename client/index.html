@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Port Zero</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: #020617;
+        color: #e5e7eb;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        min-height: 100vh;
+      }
+
+      .wrapper {
+        margin-top: 40px;
+        text-align: center;
+      }
+
+      h1 {
+        margin-bottom: 16px;
+        font-size: 32px;
+        font-weight: 700;
+      }
+
+      #gameCanvas {
+        border: 1px solid #0f172a;
+        background: #000;
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <h1>Port Zero</h1>
+      <canvas id="gameCanvas" width="1024" height="640"></canvas>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="config.js"></script>
+    <script src="map.js"></script>
+    <script src="entities.js"></script>
+    <script src="state.js"></script>
+    <script src="logic.js"></script>
+    <script src="render.js"></script>
+    <script src="input.js"></script>
+    <script src="main.js"></script>
+  </body>
+</html>
