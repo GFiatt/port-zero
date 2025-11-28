@@ -39,8 +39,8 @@ function spawnWave(waveNumber) {
 
   // DEVIL: desde wave 10, 1, 2, 3... por wave (limitado a la mitad del total)
   let numDevils = 0;
-  if (waveNumber >= 10) {
-    numDevils = waveNumber - 9; // 10→1, 11→2...
+  if (waveNumber >= 8) {
+    numDevils = waveNumber - 7; // 10→1, 11→2...
     numDevils = Math.min(numDevils, Math.floor(total / 2));
     remaining -= numDevils;
   }

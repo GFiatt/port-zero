@@ -5,7 +5,7 @@ function drawBackground() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const margin = 40;
-  ctx.fillStyle = '#020b1f';
+  ctx.fillStyle = '#4d4d4d';
   ctx.fillRect(
     margin,
     margin,
@@ -111,14 +111,67 @@ function drawBullets() {
   });
 }
 
+function getEnemySpriteImageAndConfig(enemy) {
+  if (enemy.type.id === ENEMY_TYPES.TYPE1.id) {
+    return { img: enemy1SpriteImage, cfg: SPRITE_CONFIG.enemies.type1 };
+  }
+  if (enemy.type.id === ENEMY_TYPES.TYPE2.id) {
+    return { img: enemy2SpriteImage, cfg: SPRITE_CONFIG.enemies.type2 };
+  }
+  if (enemy.type.id === ENEMY_TYPES.TYPE3.id) {
+    return { img: enemy3SpriteImage, cfg: SPRITE_CONFIG.enemies.type3 };
+  }
+  if (enemy.type.id === ENEMY_TYPES.DEVIL.id) {
+    return { img: enemyDevilSpriteImage, cfg: SPRITE_CONFIG.enemies.devil };
+  }
+  return null;
+}
+
+function drawEnemySprite(enemy, img, cfg) {
+  if (!img || !cfg) return;
+
+  const fw = cfg.frameWidth;
+  const fh = cfg.frameHeight;
+  const cols = cfg.sheetCols;
+  const scale = cfg.scale;
+
+  const facing = enemy.animFacing || 'down';
+  const frames = cfg.frames[facing] || cfg.frames.down;
+  const frameIndex = frames[enemy.animFrame % frames.length];
+
+  const sx = (frameIndex % cols) * fw;
+  const sy = Math.floor(frameIndex / cols) * fh;
+
+  const dw = fw * scale;
+  const dh = fh * scale;
+
+  ctx.save();
+  ctx.translate(enemy.x, enemy.y);
+  ctx.drawImage(
+    img,
+    sx, sy, fw, fh,
+    -dw / 2, -dh / 2, dw, dh
+  );
+  ctx.restore();
+}
+
 function drawEnemies() {
   enemies.forEach((enemy) => {
+    const spriteData = getEnemySpriteImageAndConfig(enemy);
+
+    if (spriteData && spriteData.img && enemy.spriteKey) {
+      drawEnemySprite(enemy, spriteData.img, spriteData.cfg);
+      return;
+    }
+
+    // Fallback: enemigo sin sprite -> círculo
     ctx.fillStyle = enemy.type.color;
     ctx.beginPath();
     ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
     ctx.fill();
   });
 }
+
 
 function drawHUD() {
   if (!player) return;

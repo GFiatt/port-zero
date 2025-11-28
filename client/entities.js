@@ -193,6 +193,27 @@ class Enemy {
     this.health = typeDef.maxHealth;
     this.damage = typeDef.damage;
     this.attackCooldown = 0;
+
+    // --- Animación según tipo ---
+    this.spriteKey = null;
+
+    if (typeDef.id === ENEMY_TYPES.TYPE1.id) {
+      this.spriteKey = 'type1';
+    } else if (typeDef.id === ENEMY_TYPES.TYPE2.id) {
+      this.spriteKey = 'type2';
+    } else if (typeDef.id === ENEMY_TYPES.TYPE3.id) {
+      this.spriteKey = 'type3';
+    } else if (typeDef.id === ENEMY_TYPES.DEVIL.id) {
+      this.spriteKey = 'devil';
+    }
+
+    if (this.spriteKey && SPRITE_CONFIG.enemies[this.spriteKey]) {
+      const cfg = SPRITE_CONFIG.enemies[this.spriteKey];
+      this.animFrame = 0;
+      this.animTimer = 0;
+      this.animSpeed = cfg.animSpeed;
+      this.animFacing = 'down'; // down/right/up/left
+    }
   }
 
   update(dt, player) {
@@ -244,6 +265,11 @@ class Enemy {
       this.x = best.x;
       this.y = best.y;
     }
+
+    // Actualizar animación si tiene sprite
+    if (this.spriteKey) {
+      this.updateAnimation(dt, dx, dy);
+    }
   }
 
   tryAttack(player) {
@@ -263,6 +289,52 @@ class Enemy {
     return this.health <= 0;
   }
 }
+
+// Método de animación compartido por todos los tipos con sprite
+Enemy.prototype.updateAnimation = function(dt, dx, dy) {
+  const cfg = SPRITE_CONFIG.enemies[this.spriteKey];
+  if (!cfg) return;
+
+  // decidir dirección según el vector hacia el jugador
+  if (Math.abs(dx) > Math.abs(dy)) {
+    this.animFacing = dx > 0 ? 'right' : 'left';
+  } else {
+    this.animFacing = dy > 0 ? 'down' : 'up';
+  }
+
+  const frameDuration = 1 / this.animSpeed;
+  this.animTimer += dt;
+
+  const frames = cfg.frames[this.animFacing] || cfg.frames.down;
+
+  while (this.animTimer >= frameDuration) {
+    this.animTimer -= frameDuration;
+    this.animFrame = (this.animFrame + 1) % frames.length;
+  }
+};
+
+
+Enemy.prototype.updateAnimation = function(dt, dx, dy) {
+  const cfg = SPRITE_CONFIG.enemies.type1;
+
+  // Determinar dirección
+  if (Math.abs(dx) > Math.abs(dy)) {
+    this.animFacing = dx > 0 ? 'right' : 'left';
+  } else {
+    this.animFacing = dy > 0 ? 'down' : 'up';
+  }
+
+  const frameDuration = 1 / this.animSpeed;
+  this.animTimer += dt;
+
+  const frames = cfg.frames[this.animFacing];
+
+  while (this.animTimer >= frameDuration) {
+    this.animTimer -= frameDuration;
+    this.animFrame = (this.animFrame + 1) % frames.length;
+  }
+};
+
 
 class AmmoPickup {
   constructor(x, y, amount) {

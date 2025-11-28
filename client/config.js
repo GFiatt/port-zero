@@ -44,7 +44,7 @@ const GAME_CONFIG = {
 // -------------------------------
 const SPRITE_CONFIG = {
   player: {
-    src: '/client/assets/devilSpriteSheet.png',
+    src: '/client/assets/playerSpriteSheet.png',
 
     // Cada celda del spritesheet
     frameWidth: 123,
@@ -53,18 +53,78 @@ const SPRITE_CONFIG = {
     sheetRows: 3,
 
     // Escala en pantalla (ajusta a gusto)
-    scale: 0.32,       // más pequeño que antes
-    animSpeed: 8,      // frames por segundo al caminar
+    scale: 0.32,
+    animSpeed: 8, // fps al caminar
 
-    // Índices de frame (row-major: row * sheetCols + col)
-    // 0: (0,0)  1: (0,1)  2: (0,2)
-    // 3: (1,0)  4: (1,1)  5: (1,2)
-    // 6: (2,0)  7: (2,1)  8: (2,2)
+    // Índices de frame (row-major)
     frames: {
-      down:  [0, 1],   // mirando hacia abajo
-      right: [4, 5],   // derecha
-      up:    [6, 7],   // espalda (ajusta si quieres otros)
-      left:  [2, 3],   // izquierda
+      down:  [0, 1],
+      right: [4, 5],
+      up:    [6, 7],
+      left:  [2, 3],
+    },
+  },
+
+  enemies: {
+    type1: {
+      src: '/client/assets/enemy1SpriteSheet.png',
+      frameWidth: 123,
+      frameHeight: 123,
+      sheetCols: 3,
+      sheetRows: 3,
+      scale: 0.32,
+      animSpeed: 6,
+      frames: {
+        down:  [0, 1],
+        right: [4, 5],
+        up:    [6, 7],
+        left:  [2, 3],
+      },
+    },
+    type2: {
+      src: '/client/assets/enemy2SpriteSheet.png',
+      frameWidth: 123,
+      frameHeight: 123,
+      sheetCols: 3,
+      sheetRows: 3,
+      scale: 0.32,
+      animSpeed: 6,
+      frames: {
+        down:  [0, 1],
+        right: [4, 5],
+        up:    [6, 7],
+        left:  [2, 3],
+      },
+    },
+    type3: {
+      src: '/client/assets/enemy3SpriteSheet.png',
+      frameWidth: 123,
+      frameHeight: 123,
+      sheetCols: 3,
+      sheetRows: 3,
+      scale: 0.32,
+      animSpeed: 6,
+      frames: {
+        down:  [0, 1],
+        right: [4, 5],
+        up:    [6, 7],
+        left:  [2, 3],
+      },
+    },
+    devil: {
+      src: '/client/assets/devilSpriteSheet.png',
+      frameWidth: 123,
+      frameHeight: 123,
+      sheetCols: 3,
+      sheetRows: 3,
+      scale: 0.32,   // si querés que sea más grande, luego solo subís esto
+      animSpeed: 6,
+      frames: {
+        down:  [0, 1],
+        right: [4, 5],
+        up:    [6, 7],
+        left:  [2, 3],
+      },
     },
   },
 };
