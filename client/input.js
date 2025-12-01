@@ -1,4 +1,6 @@
-// Input
+// ========================================
+// INPUT - Captura de entrada (adaptado para red)
+// ========================================
 
 window.addEventListener('keydown', (e) => {
   const key = e.key.toLowerCase();
@@ -9,17 +11,32 @@ window.addEventListener('keydown', (e) => {
 
   keys[key] = true;
 
-  if (
-    e.key === 'Enter' &&
-    (currentState === GAME_STATE.MENU ||
-      currentState === GAME_STATE.GAME_OVER)
-  ) {
-    resetGame();
+  // Enter para ir al lobby (en menú), iniciar partida (en lobby) o reiniciar (game over)
+  if (e.key === 'Enter') {
+    if (currentState === GAME_STATE.MENU) {
+      // Ir al lobby
+      if (isConnected) {
+        currentState = GAME_STATE.LOBBY;
+        console.log('[INPUT] Entered lobby');
+      }
+    } else if (currentState === GAME_STATE.LOBBY) {
+      // Iniciar partida desde el lobby
+      if (typeof joinGame === 'function') {
+        joinGame();
+      }
+    } else if (currentState === GAME_STATE.GAME_OVER) {
+      // Volver al menú para reconectar
+      currentState = GAME_STATE.MENU;
+      players.clear();
+      enemies = [];
+      bullets = [];
+    }
   }
 
+  // R para recargar - ENVIAR AL SERVIDOR
   if (key === 'r') {
-    if (currentState === GAME_STATE.PLAYING && player) {
-      player.startReload();
+    if (currentState === GAME_STATE.PLAYING && typeof sendReload === 'function') {
+      sendReload();
     }
   }
 });
