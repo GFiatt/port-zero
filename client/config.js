@@ -5,8 +5,36 @@ const ctx = canvas.getContext('2d');
 
 const GAME_STATE = {
   MENU: 'menu',
+  LOBBY: 'lobby',
   PLAYING: 'playing',
-  GAME_OVER: 'game_over',
+  GAME_OVER: 'gameOver',
+};
+
+// -------------------------------
+// Configuración de Red (IMPORTANTE para juego en línea)
+// -------------------------------
+const NETWORK_CONFIG = {
+  // SERVER_URL: URL del servidor de juego
+  // 
+  // OPCIONES DE CONFIGURACIÓN:
+  // 
+  // 1) Desarrollo Local (todos en localhost):
+  //    Usar: window.location.origin
+  //    Resultado: http://localhost:4000
+  //
+  // 2) Servidor en Cloud (Railway/Render/VPS):
+  //    Cambiar a: 'https://tu-app.railway.app' o 'https://tu-dominio.com'
+  //    Los jugadores se conectan vía Internet desde distintas casas/redes
+  //
+  // 3) VPN (Tailscale/ZeroTier) - Para jugar entre casas sin servidor público:
+  //    Cambiar a: 'http://100.x.x.x:4000' (IP de Tailscale del host)
+  //    Todos deben estar en la misma VPN
+  //
+  SERVER_URL: window.location.origin, // <-- CAMBIAR AQUÍ para producción
+  
+  CLIENT_TICK_RATE: 20,        // Hz - Frecuencia de envío de inputs al servidor
+  MAX_PLAYERS: 4,              // Máximo de jugadores en una partida
+  INTERPOLATION_DELAY: 100,    // ms - Para suavizar movimiento (opcional)
 };
 
 // -------------------------------

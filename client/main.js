@@ -1,11 +1,12 @@
-// main.js
-// Game loop + conexión socket
+// ========================================
+// MAIN - Game Loop Principal
+// ========================================
+// El socket ahora se maneja en network.js
+// Este archivo solo maneja el rendering loop
 
-const socket = io();
-
-// arranca el loop cuando todo está listo
+// Arranca el loop cuando todo está listo
 function startGameLoop() {
-  // aseguramos que lastTime tenga algún valor inicial
+  // Aseguramos que lastTime tenga algún valor inicial
   if (typeof lastTime === 'undefined') {
     window.lastTime = performance.now();
   }
@@ -16,7 +17,10 @@ function gameLoop(timestamp) {
   const dt = (timestamp - lastTime) / 1000 || 0;
   lastTime = timestamp;
 
+  // Update solo maneja animaciones locales (la lógica está en el servidor)
   update(dt);
+  
+  // Render dibuja el estado sincronizado desde el servidor
   render();
 
   requestAnimationFrame(gameLoop);
@@ -26,23 +30,17 @@ function gameLoop(timestamp) {
 if (typeof loadAssets === 'function') {
   loadAssets()
     .then(() => {
-      console.log('Assets loaded, starting game loop');
+      console.log('[CLIENT] Assets loaded, starting game loop');
       startGameLoop();
     })
     .catch((err) => {
-      console.error('Error loading assets, starting anyway:', err);
+      console.error('[CLIENT] Error loading assets, starting anyway:', err);
       startGameLoop();
     });
 } else {
-  // por si algún día quitas assets.js
+  // Por si algún día quitas assets.js
   startGameLoop();
 }
 
-// Logs básicos de socket.io
-socket.on('connect', () => {
-  console.log('Connected to server as', socket.id);
-});
-
-socket.on('disconnect', () => {
-  console.log('Disconnected from server');
-});
+// La conexión de red se maneja en network.js
+console.log('[CLIENT] Main initialized - network.js handles Socket.IO');
