@@ -15,6 +15,7 @@ window.addEventListener('keydown', (e) => {
       currentState === GAME_STATE.GAME_OVER)
   ) {
     resetGame();
+    playMainSong();
   }
 
   if (key === 'r') {

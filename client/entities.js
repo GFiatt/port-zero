@@ -99,10 +99,19 @@ class Player {
 
   tryShoot() {
     if (this.isReloading) return;
-    if (this.ammo <= 0) return;
 
     const minDelay = 1 / GAME_CONFIG.fireRate;
     if (this.timeSinceLastShot < minDelay) return;
+
+    // Sin balas en el cargador
+    if (this.ammo <= 0) {
+      // Sin balas en ninguna parte (revólver seco)
+      if (this.reserveAmmo <= 0 && typeof playOutOfAmmoSound === 'function') {
+        playOutOfAmmoSound();
+      }
+      this.timeSinceLastShot = 0;
+      return;
+    }
 
     const dirX = Math.cos(this.angle);
     const dirY = Math.sin(this.angle);
@@ -117,15 +126,26 @@ class Player {
     bullets.push(bullet);
     this.ammo -= 1;
     this.timeSinceLastShot = 0;
+
+    // 🔊 sonido del disparo (sin lag, con overlap)
+    if (typeof playShootSound === 'function') {
+      playShootSound();
+    }
   }
 
   startReload() {
     if (this.isReloading) return;
     if (this.ammo === this.magSize) return;
     if (this.reserveAmmo <= 0) return;
+
     this.isReloading = true;
     this.reloadTimer = 0;
+
+    if (typeof playReloadSound === 'function') {
+      playReloadSound();
+    }
   }
+
 
   updateAnimation(dt) {
     const cfg = SPRITE_CONFIG.player;

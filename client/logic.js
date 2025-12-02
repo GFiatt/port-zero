@@ -141,6 +141,9 @@ function update(dt) {
     const dist = Math.hypot(dx, dy);
     if (dist <= pickup.radius + player.radius) {
       player.reserveAmmo += pickup.amount;
+      if (typeof playMoreAmmoSound === 'function') {
+        playMoreAmmoSound();
+      }
       return false;
     }
     return true;
@@ -156,10 +159,14 @@ function update(dt) {
         player.maxHealth,
         player.health + pickup.amount
       );
+      if (typeof playHealSound === 'function') {
+        playHealSound();
+      }
       return false;
     }
     return true;
   });
+
 
   // Colisión balas-enemigos
   for (let i = enemies.length - 1; i >= 0; i--) {
@@ -189,6 +196,10 @@ function update(dt) {
   // Muerte del jugador
   if (player.health <= 0) {
     currentState = GAME_STATE.GAME_OVER;
+    stopMainSong();
+    if (typeof playRandomDeathYell === 'function') {
+      playRandomDeathYell();
+    }
     return;
   }
 

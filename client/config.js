@@ -44,7 +44,7 @@ const GAME_CONFIG = {
 // -------------------------------
 const SPRITE_CONFIG = {
   player: {
-    src: '/client/assets/playerSpriteSheet.png',
+    src: '/client/assets/images/playerSpriteSheet.png',
 
     // Cada celda del spritesheet
     frameWidth: 123,
@@ -67,7 +67,7 @@ const SPRITE_CONFIG = {
 
   enemies: {
     type1: {
-      src: '/client/assets/enemy1SpriteSheet.png',
+      src: '/client/assets/images/enemy1SpriteSheet.png',
       frameWidth: 123,
       frameHeight: 123,
       sheetCols: 3,
@@ -82,7 +82,7 @@ const SPRITE_CONFIG = {
       },
     },
     type2: {
-      src: '/client/assets/enemy2SpriteSheet.png',
+      src: '/client/assets/images/enemy2SpriteSheet.png',
       frameWidth: 123,
       frameHeight: 123,
       sheetCols: 3,
@@ -97,7 +97,7 @@ const SPRITE_CONFIG = {
       },
     },
     type3: {
-      src: '/client/assets/enemy3SpriteSheet.png',
+      src: '/client/assets/images/enemy3SpriteSheet.png',
       frameWidth: 123,
       frameHeight: 123,
       sheetCols: 3,
@@ -112,7 +112,7 @@ const SPRITE_CONFIG = {
       },
     },
     devil: {
-      src: '/client/assets/devilSpriteSheet.png',
+      src: '/client/assets/images/devilSpriteSheet.png',
       frameWidth: 123,
       frameHeight: 123,
       sheetCols: 3,
@@ -166,5 +166,24 @@ const ENEMY_TYPES = {
     damage: 28,
     color: '#a855f7',
     score: 120,
+  },
+};
+
+const AUDIO_CONFIG = {
+  sfx: {
+    shoot:      '/client/assets/audio/sfx/gun-shot-1-7069.mp3',
+    heal:       '/client/assets/audio/sfx/heal.mp3',
+    moreAmmo:   '/client/assets/audio/sfx/moreammo.wav',
+    outOfAmmo:  '/client/assets/audio/sfx/outofammo.wav',
+    reload:     '/client/assets/audio/sfx/weapload.wav',
+    deathYells: [
+      '/client/assets/audio/sfx/death/yell5.wav',
+      '/client/assets/audio/sfx/death/yell6.wav',
+      '/client/assets/audio/sfx/death/yell10.wav',
+      '/client/assets/audio/sfx/death/yell11.wav',
+    ],
+  },
+  music: {
+    mainSong: '/client/assets/audio/music/mainSong.mp3',
   },
 };
