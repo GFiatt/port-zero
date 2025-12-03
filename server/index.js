@@ -77,6 +77,10 @@ const CANVAS_WIDTH = 1024;
 const CANVAS_HEIGHT = 640;
 const MARGIN = 40;
 
+const PLAYER_ANIM_SPEED = 8;          // igual que SPRITE_CONFIG.player.animSpeed
+const PLAYER_ANIM_FRAMES_PER_DIR = 2; // frames por dirección (down/right/up/left)
+
+
 // ========================================
 // ESTADO DEL JUEGO EN EL SERVIDOR (Autoritativo)
 // ========================================
@@ -366,24 +370,47 @@ function updateGame(dt) {
     const input = playerInputs.get(playerId);
     if (!input) return;
 
-    // Movimiento
+    // ------------------------
+    // Movimiento + dirección
+    // ------------------------
     let dx = 0, dy = 0;
     if (input.keys.w || input.keys['w']) dy -= 1;
     if (input.keys.s || input.keys['s']) dy += 1;
     if (input.keys.a || input.keys['a']) dx -= 1;
     if (input.keys.d || input.keys['d']) dx += 1;
 
+    // asumimos quieto por defecto
+    playerData.isMoving = false;
+
     if (dx !== 0 || dy !== 0) {
       const len = Math.hypot(dx, dy) || 1;
       dx /= len;
       dy /= len;
+
       playerData.x += dx * GAME_CONFIG.playerSpeed * dt;
       playerData.y += dy * GAME_CONFIG.playerSpeed * dt;
+
+      playerData.isMoving = true;
+
+      // misma lógica que en Player.update() del cliente
+      if (Math.abs(dx) > Math.abs(dy)) {
+        playerData.animFacing = dx > 0 ? 2 : 1; // right / left
+      } else {
+        playerData.animFacing = dy > 0 ? 0 : 3; // down / up
+      }
     }
 
     // Límites del área jugable
-    playerData.x = clamp(playerData.x, MARGIN + playerData.radius, CANVAS_WIDTH - MARGIN - playerData.radius);
-    playerData.y = clamp(playerData.y, MARGIN + playerData.radius, CANVAS_HEIGHT - MARGIN - playerData.radius);
+    playerData.x = clamp(
+      playerData.x,
+      MARGIN + playerData.radius,
+      CANVAS_WIDTH - MARGIN - playerData.radius
+    );
+    playerData.y = clamp(
+      playerData.y,
+      MARGIN + playerData.radius,
+      CANVAS_HEIGHT - MARGIN - playerData.radius
+    );
 
     // Colisiones con paredes
     for (const wall of walls) {
@@ -391,9 +418,14 @@ function updateGame(dt) {
     }
 
     // Ángulo hacia el mouse
-    playerData.angle = Math.atan2(input.mousePos.y - playerData.y, input.mousePos.x - playerData.x);
+    playerData.angle = Math.atan2(
+      input.mousePos.y - playerData.y,
+      input.mousePos.x - playerData.x
+    );
 
+    // ------------------------
     // Recarga
+    // ------------------------
     if (playerData.isReloading) {
       playerData.reloadTimer += dt;
       if (playerData.reloadTimer >= GAME_CONFIG.reloadTime) {
@@ -406,7 +438,9 @@ function updateGame(dt) {
       }
     }
 
+    // ------------------------
     // Disparo
+    // ------------------------
     playerData.timeSinceLastShot += dt;
     if (input.shooting && !playerData.isReloading && playerData.ammo > 0) {
       const minDelay = 1 / GAME_CONFIG.fireRate;
@@ -414,7 +448,7 @@ function updateGame(dt) {
         const bulletId = gameState.nextBulletId++;
         const dirX = Math.cos(playerData.angle);
         const dirY = Math.sin(playerData.angle);
-        
+
         gameState.bullets.set(bulletId, {
           id: bulletId,
           x: playerData.x + dirX * (playerData.radius + 4),
@@ -424,10 +458,10 @@ function updateGame(dt) {
           life: 0,
           radius: GAME_CONFIG.bulletRadius,
         });
-        
+
         playerData.ammo -= 1;
         playerData.timeSinceLastShot = 0;
-        
+
         // Auto-recarga si se quedó sin balas y tiene munición de reserva
         if (playerData.ammo === 0 && playerData.reserveAmmo > 0) {
           playerData.isReloading = true;
@@ -435,11 +469,34 @@ function updateGame(dt) {
         }
       }
     }
-    
+
     // Auto-recarga si intenta disparar sin balas y tiene munición de reserva
-    if (input.shooting && !playerData.isReloading && playerData.ammo === 0 && playerData.reserveAmmo > 0) {
+    if (
+      input.shooting &&
+      !playerData.isReloading &&
+      playerData.ammo === 0 &&
+      playerData.reserveAmmo > 0
+    ) {
       playerData.isReloading = true;
       playerData.reloadTimer = GAME_CONFIG.reloadTime;
+    }
+
+    // ------------------------
+    // Animación del jugador
+    // ------------------------
+    if (!playerData.isMoving) {
+      // quieto → frame base
+      playerData.animFrame = 0;
+      playerData.animTimer = 0;
+    } else {
+      const frameDuration = 1 / PLAYER_ANIM_SPEED;
+      playerData.animTimer += dt;
+
+      while (playerData.animTimer >= frameDuration) {
+        playerData.animTimer -= frameDuration;
+        playerData.animFrame =
+          (playerData.animFrame + 1) % PLAYER_ANIM_FRAMES_PER_DIR;
+      }
     }
   });
 
@@ -638,6 +695,9 @@ function broadcastGameState() {
       reserveAmmo: p.reserveAmmo,
       isReloading: p.isReloading,
       radius: p.radius,
+
+      animFrame: p.animFrame || 0,
+      animFacing: typeof p.animFacing === 'number' ? p.animFacing : 0,
     })),
     bullets: Array.from(gameState.bullets.values()).map(b => ({
       id: b.id,
@@ -834,6 +894,11 @@ function startGame() {
       isReloading: false,
       reloadTimer: 0,
       timeSinceLastShot: 0,
+
+      animFrame: 0,
+      animTimer: 0,
+      animFacing: 0,   // 0=down,1=left,2=right,3=up (igual que en el cliente)
+      isMoving: false,
     });
     
     playerInputs.set(socketId, {
