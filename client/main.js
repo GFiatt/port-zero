@@ -1,48 +1,75 @@
-// main.js
-// Game loop + conexión socket
+// ========================================
+// MAIN - Game Loop Principal
+// ========================================
+// El socket ahora se maneja en network.js
+// Este archivo solo maneja el rendering loop
 
-const socket = io();
-
-// arranca el loop cuando todo está listo
+// Arranca el loop cuando todo está listo
 function startGameLoop() {
-  // aseguramos que lastTime tenga algún valor inicial
+  // Aseguramos que lastTime tenga algún valor inicial
   if (typeof lastTime === 'undefined') {
     window.lastTime = performance.now();
   }
   requestAnimationFrame(gameLoop);
 }
 
+// Variable para detectar cuando el juego empieza (para música)
+let previousState = null;
+let musicStarted = false;
+
 function gameLoop(timestamp) {
   const dt = (timestamp - lastTime) / 1000 || 0;
   lastTime = timestamp;
 
+  // Detectar cuando el juego cambia a PLAYING para iniciar música
+  if (typeof currentState !== 'undefined' && currentState === GAME_STATE.PLAYING) {
+    if (previousState !== GAME_STATE.PLAYING && !musicStarted) {
+      // El juego acaba de empezar (desde MENU, LOBBY, o GAME_OVER)
+      if (typeof playMainSong === 'function') {
+        playMainSong();
+        musicStarted = true;
+        console.log('[AUDIO] Music started');
+      }
+    }
+  }
+  
+  // Resetear flag de música cuando salimos de PLAYING
+  if (currentState !== GAME_STATE.PLAYING && musicStarted) {
+    musicStarted = false;
+  }
+  
+  previousState = currentState;
+
+  // Tu update sigue siendo el mismo de logic.js (singleplayer completo)
   update(dt);
+
+  // Tu render sigue igual (sprites, HUD, etc.)
   render();
 
   requestAnimationFrame(gameLoop);
 }
 
-// Cargar assets primero (sprites)
+// Cargar assets primero (sprites, sonidos, etc.)
 if (typeof loadAssets === 'function') {
   loadAssets()
     .then(() => {
-      console.log('Assets loaded, starting game loop');
+      console.log('[CLIENT] Assets loaded, starting game loop');
+      
+      // Verificar estado del audio
+      if (typeof checkAudioStatus === 'function') {
+        checkAudioStatus();
+      }
+      
       startGameLoop();
     })
     .catch((err) => {
-      console.error('Error loading assets, starting anyway:', err);
+      console.error('[CLIENT] Error loading assets, starting anyway:', err);
       startGameLoop();
     });
 } else {
-  // por si algún día quitas assets.js
+  // Por si algún día quitas assets.js
   startGameLoop();
 }
 
-// Logs básicos de socket.io
-socket.on('connect', () => {
-  console.log('Connected to server as', socket.id);
-});
-
-socket.on('disconnect', () => {
-  console.log('Disconnected from server');
-});
+// La conexión de red se maneja en network.js
+console.log('[CLIENT] Main initialized - network.js handles Socket.IO');

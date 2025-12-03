@@ -56,9 +56,74 @@ function drawHealthPickups() {
 }
 
 function drawPlayer() {
+  // Modo multijugador: dibujar todos los jugadores CON SPRITES
+  if (isConnected && players.size > 0) {
+    players.forEach((playerData, playerId) => {
+      if (!playerData || typeof playerData.x === 'undefined' || typeof playerData.y === 'undefined') {
+        console.warn('[RENDER] playerData inválido:', playerId, playerData);
+        return;
+      }
+
+      const isLocal = playerId === localPlayerId;
+      
+      // Dibujar sprite del jugador (igual que single-player)
+      if (playerSpriteImage) {
+        const cfg = SPRITE_CONFIG.player;
+        const fw = cfg.frameWidth;
+        const fh = cfg.frameHeight;
+        const cols = cfg.sheetCols;
+        const scale = cfg.scale;
+
+        // Usar animación si existe, sino frame 0
+        const animFacing = playerData.animFacing || 0;
+        let dirFrames = cfg.frames.down;
+        switch (animFacing) {
+          case 1: dirFrames = cfg.frames.left;  break;
+          case 2: dirFrames = cfg.frames.right; break;
+          case 3: dirFrames = cfg.frames.up;    break;
+          default: dirFrames = cfg.frames.down; break;
+        }
+
+        const animFrame = playerData.animFrame || 0;
+        const frameIndex = dirFrames[animFrame % dirFrames.length];
+
+        const sx = (frameIndex % cols) * fw;
+        const sy = Math.floor(frameIndex / cols) * fh;
+
+        const dw = fw * scale;
+        const dh = fh * scale;
+
+        ctx.save();
+        ctx.translate(playerData.x, playerData.y);
+        ctx.drawImage(
+          playerSpriteImage,
+          sx, sy, fw, fh,
+          -dw / 2, -dh / 2, dw, dh
+        );
+        ctx.restore();
+      } else {
+        // Fallback: círculo si no hay sprite
+        ctx.fillStyle = '#22c55e';
+        ctx.beginPath();
+        ctx.arc(playerData.x, playerData.y, playerData.radius || 22, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Indicador de jugador local (anillo dorado)
+      if (isLocal) {
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(playerData.x, playerData.y, (playerData.radius || 22) + 6, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    });
+    return;
+  }
+
+  // Modo single-player: dibujar solo player
   if (!player) return;
 
-  // Si todavía no cargó el sprite, dibujamos el círculo verde como fallback
   if (!playerSpriteImage) {
     ctx.fillStyle = '#22c55e';
     ctx.beginPath();
@@ -73,7 +138,6 @@ function drawPlayer() {
   const cols = cfg.sheetCols;
   const scale = cfg.scale;
 
-  // Elegimos el arreglo de frames según hacia dónde mira
   let dirFrames = cfg.frames.down;
   switch (player.animFacing) {
     case 1: dirFrames = cfg.frames.left;  break;
@@ -105,23 +169,25 @@ function drawPlayer() {
 function drawBullets() {
   ctx.fillStyle = '#facc15';
   bullets.forEach((b) => {
+    const radius = b.radius || 4; // Fallback a 4 si no tiene radius
     ctx.beginPath();
-    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+    ctx.arc(b.x, b.y, radius, 0, Math.PI * 2);
     ctx.fill();
   });
 }
 
 function getEnemySpriteImageAndConfig(enemy) {
-  if (enemy.type.id === ENEMY_TYPES.TYPE1.id) {
+  // El servidor envía typeId directamente (1, 2, 3, 4)
+  if (enemy.typeId === 1) {
     return { img: enemy1SpriteImage, cfg: SPRITE_CONFIG.enemies.type1 };
   }
-  if (enemy.type.id === ENEMY_TYPES.TYPE2.id) {
+  if (enemy.typeId === 2) {
     return { img: enemy2SpriteImage, cfg: SPRITE_CONFIG.enemies.type2 };
   }
-  if (enemy.type.id === ENEMY_TYPES.TYPE3.id) {
+  if (enemy.typeId === 3) {
     return { img: enemy3SpriteImage, cfg: SPRITE_CONFIG.enemies.type3 };
   }
-  if (enemy.type.id === ENEMY_TYPES.DEVIL.id) {
+  if (enemy.typeId === 4) {
     return { img: enemyDevilSpriteImage, cfg: SPRITE_CONFIG.enemies.devil };
   }
   return null;
@@ -159,13 +225,15 @@ function drawEnemies() {
   enemies.forEach((enemy) => {
     const spriteData = getEnemySpriteImageAndConfig(enemy);
 
-    if (spriteData && spriteData.img && enemy.spriteKey) {
+    // Intentar usar sprite si está disponible
+    if (spriteData && spriteData.img) {
       drawEnemySprite(enemy, spriteData.img, spriteData.cfg);
       return;
     }
 
-    // Fallback: enemigo sin sprite -> círculo
-    ctx.fillStyle = enemy.type.color;
+    // Fallback: enemigo sin sprite -> círculo con color según typeId
+    const colors = ['#888888', '#ff5555', '#ffaa00', '#aa55ff', '#ff0000']; // índice 0 vacío, 1-4 tipos
+    ctx.fillStyle = colors[enemy.typeId] || '#ff0000';
     ctx.beginPath();
     ctx.arc(enemy.x, enemy.y, enemy.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -174,14 +242,20 @@ function drawEnemies() {
 
 
 function drawHUD() {
-  if (!player) return;
+  // Obtener datos del jugador (multijugador o singleplayer)
+  let playerData = player;
+  if (isConnected && localPlayerId) {
+    playerData = players.get(localPlayerId);
+  }
+  
+  if (!playerData) return;
 
   ctx.font = '16px Arial';
   ctx.textAlign = 'left';
 
   ctx.fillStyle = '#e5e7eb';
   ctx.fillText(
-    `HP: ${Math.max(0, Math.floor(player.health))}/${player.maxHealth}`,
+    `HP: ${Math.max(0, Math.floor(playerData.health))}/${playerData.maxHealth}`,
     20,
     24
   );
@@ -190,7 +264,7 @@ function drawHUD() {
   const barY = 32;
   const barWidth = 200;
   const barHeight = 10;
-  const ratio = clamp(player.health / player.maxHealth, 0, 1);
+  const ratio = clamp(playerData.health / playerData.maxHealth, 0, 1);
 
   ctx.fillStyle = '#4b5563';
   ctx.fillRect(barX, barY, barWidth, barHeight);
@@ -199,13 +273,18 @@ function drawHUD() {
   ctx.fillRect(barX, barY, barWidth * ratio, barHeight);
 
   ctx.fillStyle = '#e5e7eb';
-  const ammoText = player.isReloading
+  const ammoText = playerData.isReloading
     ? 'Reloading...'
-    : `Ammo: ${player.ammo}/${player.reserveAmmo}`;
+    : `Ammo: ${playerData.ammo}/${playerData.reserveAmmo}`;
   ctx.fillText(ammoText, 20, 60);
 
   ctx.fillText(`Wave: ${currentWave}`, 20, 86);
   ctx.fillText(`Score: ${score}`, 20, 112);
+  ctx.fillText(`Enemies: ${enemies.length}`, 20, 138);
+  
+  if (isConnected) {
+    ctx.fillText(`Players: ${players.size}`, 20, 164);
+  }
 
   if (betweenWaves) {
     ctx.textAlign = 'center';
@@ -224,24 +303,42 @@ function drawMenu() {
   ctx.fillStyle = '#e5e7eb';
   ctx.textAlign = 'center';
 
-  ctx.font = '42px Arial';
-  ctx.fillText('Port Zero', canvas.width / 2, canvas.height / 2 - 40);
+  ctx.font = 'bold 48px Arial';
+  ctx.fillText('PORT ZERO', canvas.width / 2, canvas.height / 2 - 60);
 
-  ctx.font = '20px Arial';
+  ctx.font = '22px Arial';
+  ctx.fillStyle = '#94a3b8';
   ctx.fillText(
-    'Top-down survival shooter (BoxHead style)',
+    'Survival Shooter Multijugador',
     canvas.width / 2,
-    canvas.height / 2
+    canvas.height / 2 - 10
   );
+
+  // Estado de conexión
+  if (isConnected) {
+    ctx.fillStyle = '#22c55e';
+    ctx.font = 'bold 24px Arial';
+    ctx.fillText('✓ CONECTADO', canvas.width / 2, canvas.height / 2 + 40);
+    
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '20px Arial';
+    ctx.fillText(
+      'Presiona ENTER para ir al LOBBY',
+      canvas.width / 2,
+      canvas.height / 2 + 80
+    );
+  } else {
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '18px Arial';
+    ctx.fillText('Conectando al servidor...', canvas.width / 2, canvas.height / 2 + 40);
+  }
+
+  ctx.fillStyle = '#64748b';
+  ctx.font = '16px Arial';
   ctx.fillText(
-    'WASD moverte, mouse apuntar, click disparar, R recargar',
+    'WASD - Mover | Mouse - Apuntar | Click - Disparar | R - Recargar',
     canvas.width / 2,
-    canvas.height / 2 + 40
-  );
-  ctx.fillText(
-    'ENTER para comenzar',
-    canvas.width / 2,
-    canvas.height / 2 + 80
+    canvas.height / 2 + 140
   );
 
   ctx.textAlign = 'left';
@@ -277,23 +374,154 @@ function drawGameOver() {
   ctx.textAlign = 'left';
 }
 
-function render() {
-  if (currentState === GAME_STATE.MENU) {
-    drawMenu();
-    return;
-  }
-
-  if (currentState === GAME_STATE.GAME_OVER) {
-    drawGameOver();
-    return;
-  }
-
+function drawLobby() {
   drawBackground();
   drawWalls();
-  drawPlayer();
-  drawBullets();
-  drawEnemies();
-  drawAmmoPickups();
-  drawHealthPickups();
-  drawHUD();
+
+  // Panel del lobby
+  ctx.fillStyle = 'rgba(15,23,42,0.95)';
+  const panelWidth = 600;
+  const panelHeight = 450;
+  const panelX = canvas.width / 2 - panelWidth / 2;
+  const panelY = canvas.height / 2 - panelHeight / 2;
+  ctx.fillRect(panelX, panelY, panelWidth, panelHeight);
+
+  // Título
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 42px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('LOBBY', canvas.width / 2, panelY + 60);
+
+  // Contador
+  ctx.fillStyle = '#e5e7eb';
+  ctx.font = '24px Arial';
+  ctx.fillText(
+    `${connectedPlayersCount}/4 Jugadores`,
+    canvas.width / 2,
+    panelY + 110
+  );
+
+  // Lista de jugadores
+  if (lobbyPlayers && lobbyPlayers.length > 0) {
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'left';
+    
+    const listStartY = panelY + 160;
+    const lineHeight = 35;
+    
+    lobbyPlayers.forEach((player, index) => {
+      const y = listStartY + index * lineHeight;
+      const isMe = player.id === localPlayerId;
+      
+      // Número
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(`${index + 1}.`, panelX + 80, y);
+      
+      // Nombre/ID (primeros 8 caracteres)
+      const playerName = isMe ? 'TÚ' : `Player ${index + 1}`;
+      ctx.fillStyle = isMe ? '#fbbf24' : '#e5e7eb';
+      ctx.fillText(playerName, panelX + 120, y);
+      
+      // Estado LISTO
+      if (player.ready) {
+        ctx.fillStyle = '#22c55e';
+        ctx.font = 'bold 20px Arial';
+        ctx.fillText('✓ LISTO', panelX + 350, y);
+        ctx.font = '20px Arial';
+      } else {
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('Esperando...', panelX + 350, y);
+      }
+    });
+  }
+
+  // Instrucciones
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '18px Arial';
+  
+  const myPlayer = lobbyPlayers.find(p => p.id === localPlayerId);
+  const myReady = myPlayer ? myPlayer.ready : false;
+  
+  if (!myReady) {
+    ctx.fillText(
+      'Presiona ENTER para marcar como LISTO',
+      canvas.width / 2,
+      panelY + panelHeight - 50
+    );
+  } else {
+    ctx.fillText(
+      'Esperando a los demás jugadores...',
+      canvas.width / 2,
+      panelY + panelHeight - 70
+    );
+    ctx.fillStyle = '#64748b';
+    ctx.font = '16px Arial';
+    ctx.fillText(
+      '(Presiona ENTER de nuevo para cancelar)',
+      canvas.width / 2,
+      panelY + panelHeight - 40
+    );
+  }
+
+  ctx.textAlign = 'left';
+}
+
+function drawBigMessage(dt) {
+  if (!bigMessage) return;
+
+  bigMessage.elapsed += dt;
+  const alpha = 1 - (bigMessage.elapsed / bigMessage.duration);
+  
+  if (alpha <= 0) {
+    bigMessage = null;
+    return;
+  }
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#fbbf24';
+  ctx.font = 'bold 48px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText(bigMessage.text, canvas.width / 2, canvas.height / 2 - 100);
+  ctx.restore();
+}
+
+function showBigMessage(text, duration = 2) {
+  bigMessage = { text, duration, elapsed: 0 };
+}
+
+function render() {
+  try {
+    if (currentState === GAME_STATE.MENU) {
+      drawMenu();
+      return;
+    }
+
+    if (currentState === GAME_STATE.LOBBY) {
+      drawLobby();
+      return;
+    }
+
+    if (currentState === GAME_STATE.GAME_OVER) {
+      drawGameOver();
+      return;
+    }
+
+    drawBackground();
+    drawWalls();
+    drawPlayer();
+    drawBullets();
+    drawEnemies();
+    drawAmmoPickups();
+    drawHealthPickups();
+    drawHUD();
+    
+    const dt = (performance.now() - lastTime) / 1000 || 0.016;
+    drawBigMessage(dt);
+  } catch (error) {
+    console.error('[RENDER] Error in render loop:', error);
+    // Volver al menú si hay un error crítico
+    currentState = GAME_STATE.MENU;
+  }
 }

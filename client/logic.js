@@ -15,6 +15,11 @@ function resetGame() {
   spawnQueue = [];
   enemySpawnTimer = 0;
 
+  // Resetear flag de muerte
+  if (typeof hasPlayedDeathSound !== 'undefined') {
+    hasPlayedDeathSound = false;
+  }
+
   spawnWave(currentWave);
   currentState = GAME_STATE.PLAYING;
 }
@@ -195,10 +200,23 @@ function update(dt) {
 
   // Muerte del jugador
   if (player.health <= 0) {
-    currentState = GAME_STATE.GAME_OVER;
-    stopMainSong();
-    if (typeof playRandomDeathYell === 'function') {
-      playRandomDeathYell();
+    // Solo ejecutar la transición a Game Over una vez
+    if (currentState !== GAME_STATE.GAME_OVER) {
+      console.log('[GAME] Player died, transitioning to GAME_OVER');
+      currentState = GAME_STATE.GAME_OVER;
+      
+      if (typeof stopMainSong === 'function') {
+        stopMainSong();
+      }
+      
+      // Reproducir grito de muerte solo una vez
+      if (typeof hasPlayedDeathSound === 'undefined') {
+        window.hasPlayedDeathSound = false;
+      }
+      if (!hasPlayedDeathSound && typeof playRandomDeathYell === 'function') {
+        playRandomDeathYell();
+        hasPlayedDeathSound = true;
+      }
     }
     return;
   }

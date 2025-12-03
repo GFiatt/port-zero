@@ -132,6 +132,7 @@ function loadEnemyDevilSprite() {
 
 // API pública para main.js
 function loadAssets() {
+  console.log('[ASSETS] Starting to load all assets...');
   return Promise.all([
     loadPlayerSprite(),
     loadEnemy1Sprite(),
@@ -145,7 +146,11 @@ function loadAssets() {
     loadOutOfAmmoSound(),
     loadReloadSound(),
     loadDeathYells(),
-  ]);
+  ]).then(() => {
+    console.log('[ASSETS] All assets loaded successfully');
+    console.log('[ASSETS] Shoot pool size:', shootSoundPool.length);
+    console.log('[ASSETS] Death yells count:', deathYellAudios.length);
+  });
 }
 
 function loadShootSound() {
@@ -297,7 +302,10 @@ function loadDeathYells() {
 
 // función global para reproducir el disparo
 function playShootSound() {
-  if (!shootSoundPool.length) return;
+  if (!shootSoundPool.length) {
+    console.warn('[SFX] shoot sound pool empty');
+    return;
+  }
 
   let audio = shootSoundPool.find(a => a.paused || a.ended);
 
@@ -314,7 +322,10 @@ function playShootSound() {
 }
 
 function playHealSound() {
-  if (!healSound) return;
+  if (!healSound) {
+    console.warn('[SFX] heal sound not loaded');
+    return;
+  }
   try {
     healSound.currentTime = 0;
     healSound.play();
@@ -324,7 +335,10 @@ function playHealSound() {
 }
 
 function playMoreAmmoSound() {
-  if (!moreAmmoSound) return;
+  if (!moreAmmoSound) {
+    console.warn('[SFX] more ammo sound not loaded');
+    return;
+  }
   try {
     moreAmmoSound.currentTime = 0;
     moreAmmoSound.play();
@@ -334,7 +348,10 @@ function playMoreAmmoSound() {
 }
 
 function playOutOfAmmoSound() {
-  if (!outOfAmmoSound) return;
+  if (!outOfAmmoSound) {
+    console.warn('[SFX] out of ammo sound not loaded');
+    return;
+  }
   try {
     outOfAmmoSound.currentTime = 0;
     outOfAmmoSound.play();
@@ -344,7 +361,10 @@ function playOutOfAmmoSound() {
 }
 
 function playReloadSound() {
-  if (!reloadSound) return;
+  if (!reloadSound) {
+    console.warn('[SFX] reload sound not loaded');
+    return;
+  }
   try {
     reloadSound.currentTime = 0;
     reloadSound.play();
@@ -354,13 +374,22 @@ function playReloadSound() {
 }
 
 function playRandomDeathYell() {
-  if (!deathYellAudios.length) return;
+  console.log('[SFX] 💀 Playing death yell');
+  if (!deathYellAudios.length) {
+    console.warn('[SFX] death yell audios not loaded');
+    return;
+  }
   const idx = Math.floor(Math.random() * deathYellAudios.length);
-  const base = deathYellAudios[idx];
+  const audio = deathYellAudios[idx];
+  if (!audio) {
+    console.warn('[SFX] death yell audio at index', idx, 'not found');
+    return;
+  }
   try {
-    const a = base.cloneNode();
-    a.volume = base.volume;
-    a.play();
+    // Reproducir directamente sin clonar para mayor confiabilidad
+    audio.currentTime = 0;
+    audio.volume = 0.9;
+    audio.play();
   } catch (e) {
     console.warn('Could not play death yell:', e);
   }
@@ -390,8 +419,12 @@ function loadMainSong() {
 }
 
 function playMainSong() {
-  if (!mainSongAudio) return;
+  if (!mainSongAudio) {
+    console.warn('[AUDIO] Main song not loaded');
+    return;
+  }
   try {
+    console.log('[AUDIO] Playing main song');
     mainSongAudio.play();
   } catch (e) {
     console.warn('Could not play main song:', e);
@@ -400,8 +433,22 @@ function playMainSong() {
 
 function stopMainSong() {
   if (!mainSongAudio) return;
+  console.log('[AUDIO] Stopping main song');
   mainSongAudio.pause();
   mainSongAudio.currentTime = 0;
+}
+
+// Función de diagnóstico para verificar que todo el audio esté cargado
+function checkAudioStatus() {
+  console.log('=== AUDIO STATUS ===');
+  console.log('Shoot sound pool:', shootSoundPool.length, 'sounds');
+  console.log('Main song:', mainSongAudio ? 'loaded' : 'NOT LOADED');
+  console.log('Heal sound:', healSound ? 'loaded' : 'NOT LOADED');
+  console.log('More ammo sound:', moreAmmoSound ? 'loaded' : 'NOT LOADED');
+  console.log('Out of ammo sound:', outOfAmmoSound ? 'loaded' : 'NOT LOADED');
+  console.log('Reload sound:', reloadSound ? 'loaded' : 'NOT LOADED');
+  console.log('Death yells:', deathYellAudios.length, 'sounds');
+  console.log('===================');
 }
 
 

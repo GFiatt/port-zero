@@ -1,16 +1,38 @@
 // Configuración base y canvas
-
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 const GAME_STATE = {
   MENU: 'menu',
+  LOBBY: 'lobby',       // <- añadido de la branch para el lobby online
   PLAYING: 'playing',
-  GAME_OVER: 'game_over',
+  GAME_OVER: 'game_over', // <- se mantiene como en main
 };
 
 // -------------------------------
-// Constantes de juego
+// Configuración de Red (de la branch)
+// -------------------------------
+const NETWORK_CONFIG = {
+  // SERVER_URL: URL del servidor de juego
+  //
+  // 1) Desarrollo local:
+  //    SERVER_URL: window.location.origin  -> http://localhost:4000
+  //
+  // 2) Servidor en cloud (Railway/Render/VPS):
+  //    SERVER_URL: 'https://tu-app.railway.app'
+  //
+  // 3) VPN (Tailscale/ZeroTier):
+  //    SERVER_URL: 'http://100.x.x.x:4000' (IP Tailscale del host)
+  //
+  SERVER_URL: window.location.origin,
+
+  CLIENT_TICK_RATE: 20,     // Hz - frecuencia de envío de inputs
+  MAX_PLAYERS: 4,
+  INTERPOLATION_DELAY: 100, // ms - para suavizar movimiento
+};
+
+// -------------------------------
+// Constantes de juego (main)
 // -------------------------------
 const GAME_CONFIG = {
   playerSpeed: 220,
@@ -40,23 +62,20 @@ const GAME_CONFIG = {
 };
 
 // -------------------------------
-// Sprites
+// Sprites (main, con /assets/images/...)
 // -------------------------------
 const SPRITE_CONFIG = {
   player: {
     src: '/client/assets/images/playerSpriteSheet.png',
 
-    // Cada celda del spritesheet
     frameWidth: 123,
     frameHeight: 123,
     sheetCols: 3,
     sheetRows: 3,
 
-    // Escala en pantalla (ajusta a gusto)
     scale: 0.32,
-    animSpeed: 8, // fps al caminar
+    animSpeed: 8,
 
-    // Índices de frame (row-major)
     frames: {
       down:  [0, 1],
       right: [4, 5],
@@ -117,7 +136,7 @@ const SPRITE_CONFIG = {
       frameHeight: 123,
       sheetCols: 3,
       sheetRows: 3,
-      scale: 0.32,   // si querés que sea más grande, luego solo subís esto
+      scale: 0.32,
       animSpeed: 6,
       frames: {
         down:  [0, 1],
@@ -128,7 +147,6 @@ const SPRITE_CONFIG = {
     },
   },
 };
-
 
 const ENEMY_TYPES = {
   TYPE1: {
@@ -169,6 +187,9 @@ const ENEMY_TYPES = {
   },
 };
 
+// -------------------------------
+// Audio (solo existe en main, lo mantenemos)
+// -------------------------------
 const AUDIO_CONFIG = {
   sfx: {
     shoot:      '/client/assets/audio/sfx/gun-shot-1-7069.mp3',
