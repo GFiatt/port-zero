@@ -165,7 +165,7 @@ function loadMapBackground() {
     };
     img.onerror = (err) => {
       console.error('Error loading map background from assets/images/map.png', err);
-      // No romper el juego si falla, solo seguir
+      
       resolve();
     };
     img.src = '/client/assets/images/map.png';

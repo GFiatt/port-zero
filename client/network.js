@@ -63,7 +63,7 @@ function setupNetworkListeners() {
     }
   });
 
-  // Estado inicial opcional (si luego lo implementas en el servidor)
+  // Estado inicial obtención de ID
   socket.on('init_state', (data) => {
     console.log('[NETWORK] init_state:', data);
     if (!data) return;
@@ -80,7 +80,7 @@ function setupNetworkListeners() {
   socket.on('game_state', (compactState) => {
     if (!compactState) return;
 
-    // DEBUG: Log cada 60 frames (aprox 2 segundos a 30Hz)
+    // DEBUG: Log cada 60 frames 
     if (Math.random() < 0.033) {
       console.log('[NETWORK] game_state:', {
         players: compactState.players?.length,

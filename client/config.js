@@ -4,9 +4,9 @@ const ctx = canvas.getContext('2d');
 
 const GAME_STATE = {
   MENU: 'menu',
-  LOBBY: 'lobby',       // <- añadido de la branch para el lobby online
+  LOBBY: 'lobby',       
   PLAYING: 'playing',
-  GAME_OVER: 'game_over', // <- se mantiene como en main
+  GAME_OVER: 'game_over', 
 };
 
 // -------------------------------
@@ -18,10 +18,9 @@ const NETWORK_CONFIG = {
   // 1) Desarrollo local:
   //    SERVER_URL: window.location.origin  -> http://localhost:4000
   //
-  // 2) Servidor en cloud (Railway/Render/VPS):
-  //    SERVER_URL: 'https://tu-app.railway.app'
+  // 
   //
-  // 3) VPN (Tailscale/ZeroTier):
+  // VPN (Tailscale):
   //    SERVER_URL: 'http://100.x.x.x:4000' (IP Tailscale del host)
   //
   SERVER_URL: window.location.origin,

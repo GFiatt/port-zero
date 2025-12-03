@@ -3,8 +3,7 @@
 // Curso: IC-7602 Redes
 // Arquitectura: Cliente-Servidor con Socket.IO
 //
-// IMPORTANTE: Este servidor debe ser accesible desde Internet o VPN
-// porque los jugadores NO estarán en la misma red local.
+//
 // ========================================
 
 const express = require('express');
@@ -19,7 +18,7 @@ const server = http.createServer(app);
 // (necesario cuando el servidor está en Railway/Render y clientes en diferentes casas)
 const io = new Server(server, {
   cors: {
-    origin: "*", // En producción, cambiar a dominios específicos
+    origin: "*", 
     methods: ["GET", "POST"]
   }
 });
@@ -39,7 +38,7 @@ app.get('/favicon.ico', (req, res) => {
 });
 
 // ========================================
-// CONFIGURACIÓN DEL JUEGO (copiado de client/config.js)
+// CONFIGURACIÓN DEL JUEGO 
 // ========================================
 const GAME_CONFIG = {
   playerSpeed: 220,
@@ -307,7 +306,7 @@ function spawnWave(waveNumber) {
     for (let i = 0; i < numType3; i++) gameState.spawnQueue.push(ENEMY_TYPES.TYPE3);
     for (let i = 0; i < numDevils; i++) gameState.spawnQueue.push(ENEMY_TYPES.DEVIL);
 
-    // IMPORTANTE: Inicializar timer para que spawnee inmediatamente
+    // Reiniciar timer de spawn
     gameState.enemySpawnTimer = GAME_CONFIG.enemySpawnIntervalBase;
     
     console.log(`[GAME] Wave ${waveNumber} started: ${total} enemies (${numType1} T1, ${numType2} T2, ${numType3} T3, ${numDevils} Devils)`);
@@ -918,9 +917,5 @@ server.listen(PORT, () => {
   console.log(`========================================`);
   console.log(`PORT ZERO - Server Running`);
   console.log(`Port: ${PORT}`);
-  console.log(`========================================`);
-  console.log(`IMPORTANTE: Para jugar desde distintas casas/redes:`);
-  console.log(`1. Desplegar en Railway/Render (recomendado)`);
-  console.log(`2. O usar VPN (Tailscale/ZeroTier)`);
   console.log(`========================================`);
 });

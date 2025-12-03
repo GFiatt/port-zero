@@ -40,10 +40,10 @@ function gameLoop(timestamp) {
   
   previousState = currentState;
 
-  // Tu update sigue siendo el mismo de logic.js (singleplayer completo)
+  // update sigue siendo el mismo de logic.js (singleplayer completo)
   update(dt);
 
-  // Tu render sigue igual (sprites, HUD, etc.)
+  // render sigue igual (sprites, HUD, etc.)
   render();
 
   requestAnimationFrame(gameLoop);
@@ -67,7 +67,7 @@ if (typeof loadAssets === 'function') {
       startGameLoop();
     });
 } else {
-  // Por si algún día quitas assets.js
+  
   startGameLoop();
 }
 
