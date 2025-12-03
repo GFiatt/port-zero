@@ -1,9 +1,23 @@
 // Render
 
 function drawBackground() {
+  // Fondo exterior (negro azuloso)
   ctx.fillStyle = '#020617';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Si el mapa ya cargó, dibujarlo escalado a todo el canvas
+  if (mapBackgroundImage && mapBackgroundLoaded) {
+    ctx.drawImage(
+      mapBackgroundImage,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+    return;
+  }
+
+  // Fallback: fondo gris viejo por si la imagen no está lista
   const margin = 40;
   ctx.fillStyle = '#4d4d4d';
   ctx.fillRect(
@@ -14,7 +28,11 @@ function drawBackground() {
   );
 }
 
+const DEBUG_DRAW_WALLS = false;
+
 function drawWalls() {
+  if (!DEBUG_DRAW_WALLS) return; // ⬅ normalmente NO dibuja nada
+
   ctx.fillStyle = '#0f172a';
   walls.forEach((wall) => {
     ctx.fillRect(wall.x, wall.y, wall.width, wall.height);

@@ -1,30 +1,43 @@
 // Mapa, paredes y utilidades de colisión
 
 // Laberinto para canvas 1024x640
+// Laberinto para canvas 1024x640
 const walls = [
-  // Columna izquierda (3 bloques)
-  { x: 160, y: 120, width: 80, height: 80 },
-  { x: 160, y: 260, width: 80, height: 80 },
-  { x: 160, y: 400, width: 80, height: 80 },
 
-  // Columna derecha (3 bloques)
-  { x: 784, y: 120, width: 80, height: 80 },
-  { x: 784, y: 260, width: 80, height: 80 },
-  { x: 784, y: 400, width: 80, height: 80 },
+  // ---------------------------------------------------------
+  // PRIMERA FILA (verticales pequeñas arriba dentro del área jugable)
+  // ---------------------------------------------------------
+  //{ x: 98,  y: 110, width: 11, height: 50 },
+  { x: 235, y: 60, width: 35, height: 70 },
+  { x: 425, y: 60, width: 35, height: 70 },
+  { x: 642, y: 60, width: 35, height: 70 },
 
-  // Fila superior interna
-  { x: 328, y: 120, width: 80, height: 80 },
-  { x: 512, y: 120, width: 80, height: 80 },
-  { x: 696, y: 120, width: 80, height: 80 },
+  // ---------------------------------------------------------
+  // SEGUNDA FILA (horizontales largas, fila 2)
+  // ---------------------------------------------------------
+  { x: 193, y: 175, width: 125, height: 54 },
+  { x: 450, y: 175, width: 379, height: 54 },
 
-  // Fila inferior interna
-  { x: 328, y: 400, width: 80, height: 80 },
-  { x: 512, y: 400, width: 80, height: 80 },
-  { x: 696, y: 400, width: 80, height: 80 },
+  // ---------------------------------------------------------
+  // TERCERA FILA (horizontales medianas en el centro)
+  // ---------------------------------------------------------
+  { x: 258, y: 280, width: 125, height: 54 },
+  { x: 640, y: 280, width: 125, height: 54 },
 
-  // Bloques centrales laterales
-  { x: 328, y: 260, width: 80, height: 80 },
-  { x: 696, y: 260, width: 80, height: 80 },
+  // ---------------------------------------------------------
+  // CUARTA FILA (horizontales largas, fila 4)
+  // ---------------------------------------------------------
+  { x: 193, y: 387, width: 125, height: 54 },
+  { x: 450, y: 387, width: 125, height: 54 },
+  { x: 705, y: 387, width: 125, height: 54 },
+
+  // ---------------------------------------------------------
+  // QUINTA FILA (verticales pequeñas abajo dentro del área jugable)
+  // ---------------------------------------------------------
+  { x: 262, y: 490, width: 53, height: 85 },
+  { x: 400, y: 490, width: 53, height: 85 },
+  { x: 580, y: 490, width: 53, height: 85 },
+  { x: 710, y: 490, width: 53, height: 85 }
 ];
 
 function clamp(value, min, max) {

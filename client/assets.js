@@ -15,6 +15,8 @@ let moreAmmoSound = null;
 let outOfAmmoSound = null;
 let reloadSound = null;
 let deathYellAudios = [];
+let mapBackgroundImage = null;
+let mapBackgroundLoaded = false;
 
 // ----------------------------
 // Player
@@ -153,6 +155,24 @@ function loadBloodSprite() {
   });
 }
 
+function loadMapBackground() {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      mapBackgroundImage = img;
+      mapBackgroundLoaded = true;
+      resolve();
+    };
+    img.onerror = (err) => {
+      console.error('Error loading map background from assets/images/map.png', err);
+      // No romper el juego si falla, solo seguir
+      resolve();
+    };
+    img.src = '/client/assets/images/map.png';
+  });
+}
+
+
 // API pública para main.js
 function loadAssets() {
   console.log('[ASSETS] Starting to load all assets...');
@@ -163,6 +183,7 @@ function loadAssets() {
     loadEnemy3Sprite(),
     loadEnemyDevilSprite(),
     loadBloodSprite(),
+    loadMapBackground(),
     loadShootSound(),
     loadMainSong(),
     loadHealSound(),
