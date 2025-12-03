@@ -84,6 +84,11 @@ const SPRITE_CONFIG = {
     },
   },
 
+  blood: {
+    src: '/client/assets/images/blood-1.png.png',
+    scale: 0.5, // Ajusta el tamaño del sprite de sangre
+  },
+
   enemies: {
     type1: {
       src: '/client/assets/images/enemy1SpriteSheet.png',

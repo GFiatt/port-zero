@@ -66,6 +66,26 @@ function drawPlayer() {
 
       const isLocal = playerId === localPlayerId;
       
+      // Si el jugador está muerto, dibujar sangre en lugar del sprite
+      if (playerData.health <= 0 && bloodSpriteImage) {
+        const bloodCfg = SPRITE_CONFIG.blood;
+        const scale = bloodCfg.scale || 0.5;
+        const width = bloodSpriteImage.width * scale;
+        const height = bloodSpriteImage.height * scale;
+        
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.drawImage(
+          bloodSpriteImage,
+          playerData.x - width / 2,
+          playerData.y - height / 2,
+          width,
+          height
+        );
+        ctx.restore();
+        return; // No dibujar el sprite del jugador
+      }
+      
       // Dibujar sprite del jugador (igual que single-player)
       if (playerSpriteImage) {
         const cfg = SPRITE_CONFIG.player;
@@ -109,13 +129,29 @@ function drawPlayer() {
         ctx.fill();
       }
 
-      // Indicador de jugador local (anillo dorado)
+      // Indicador de jugador local (flecha verde apuntando hacia abajo)
       if (isLocal) {
-        ctx.strokeStyle = '#fbbf24';
-        ctx.lineWidth = 3;
+        const offset = (playerData.radius || 22) + 15; // Distancia arriba del jugador
+        ctx.fillStyle = '#22c55e';
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 2;
+        
+        ctx.save();
+        ctx.translate(playerData.x, playerData.y - offset);
+        
+        // Dibujar flecha apuntando hacia abajo
         ctx.beginPath();
-        ctx.arc(playerData.x, playerData.y, (playerData.radius || 22) + 6, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.moveTo(0, 8);        // Punta de la flecha
+        ctx.lineTo(-5, 0);       // Lado izquierdo
+        ctx.lineTo(-2, 0);       // Parte interna izquierda
+        ctx.lineTo(-2, -6);      // Línea izquierda hacia arriba
+        ctx.lineTo(2, -6);       // Línea superior
+        ctx.lineTo(2, 0);        // Línea derecha hacia abajo
+        ctx.lineTo(5, 0);        // Parte interna derecha
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
       }
     });
     return;

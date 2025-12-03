@@ -72,7 +72,7 @@ window.addEventListener('keydown', (e) => {
       // Si estamos en multiplayer, reproducir sonido localmente y enviar al servidor
       if (typeof isConnected !== 'undefined' && isConnected &&
           typeof sendReload === 'function') {
-        // Multiplayer: reproducir sonido localmente
+        // Multiplayer: reproducir sonido localmente (sendReload ya verifica isLocalPlayerDead)
         if (typeof playReloadSound === 'function') {
           playReloadSound();
         }

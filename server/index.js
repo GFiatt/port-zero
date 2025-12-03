@@ -208,6 +208,7 @@ function getRandomEdgeSpawn() {
 // ========================================
 
 function initGame() {
+  console.log('[INIT] Resetting game state...');
   gameState.players.clear();
   gameState.bullets.clear();
   gameState.enemies.clear();
@@ -223,7 +224,9 @@ function initGame() {
   gameState.gameStarted = true;
   gameState.gameOver = false;
   
+  console.log('[INIT] Spawning wave 1...');
   spawnWave(1);
+  console.log(`[INIT] Game initialized. Enemies: ${gameState.enemies.size}, Started: ${gameState.gameStarted}, GameOver: ${gameState.gameOver}`);
 }
 
 function spawnWave(waveNumber) {
@@ -253,17 +256,44 @@ function spawnWave(waveNumber) {
 
   const numType1 = remaining;
 
-  gameState.spawnQueue = [];
-  for (let i = 0; i < numType1; i++) gameState.spawnQueue.push(ENEMY_TYPES.TYPE1);
-  for (let i = 0; i < numType2; i++) gameState.spawnQueue.push(ENEMY_TYPES.TYPE2);
-  for (let i = 0; i < numType3; i++) gameState.spawnQueue.push(ENEMY_TYPES.TYPE3);
-  for (let i = 0; i < numDevils; i++) gameState.spawnQueue.push(ENEMY_TYPES.DEVIL);
+  // En la ronda 1, spawnear todos los enemigos inmediatamente
+  if (waveNumber === 1) {
+    gameState.spawnQueue = [];
+    // Spawnear todos los enemigos de tipo 1 inmediatamente
+    for (let i = 0; i < numType1; i++) {
+      const { x, y } = getRandomEdgeSpawn();
+      const enemyId = gameState.nextEnemyId++;
+      gameState.enemies.set(enemyId, {
+        id: enemyId,
+        x, y,
+        typeId: ENEMY_TYPES.TYPE1.id,
+        speed: ENEMY_TYPES.TYPE1.speed,
+        radius: ENEMY_TYPES.TYPE1.radius,
+        health: ENEMY_TYPES.TYPE1.maxHealth,
+        maxHealth: ENEMY_TYPES.TYPE1.maxHealth,
+        damage: ENEMY_TYPES.TYPE1.damage,
+        score: ENEMY_TYPES.TYPE1.score,
+        attackCooldown: 0,
+        animFrame: 0,
+        animFacing: 'down',
+        animTimer: 0,
+      });
+    }
+    console.log(`[GAME] Wave 1 started: ${numType1} enemies spawned immediately`);
+  } else {
+    // Rondas 2+: spawn progresivo como antes
+    gameState.spawnQueue = [];
+    for (let i = 0; i < numType1; i++) gameState.spawnQueue.push(ENEMY_TYPES.TYPE1);
+    for (let i = 0; i < numType2; i++) gameState.spawnQueue.push(ENEMY_TYPES.TYPE2);
+    for (let i = 0; i < numType3; i++) gameState.spawnQueue.push(ENEMY_TYPES.TYPE3);
+    for (let i = 0; i < numDevils; i++) gameState.spawnQueue.push(ENEMY_TYPES.DEVIL);
 
-  // IMPORTANTE: Inicializar timer para que spawnee inmediatamente
-  gameState.enemySpawnTimer = GAME_CONFIG.enemySpawnIntervalBase;
-  
-  console.log(`[GAME] Wave ${waveNumber} started: ${total} enemies (${numType1} T1, ${numType2} T2, ${numType3} T3, ${numDevils} Devils)`);
-  console.log(`[GAME] Spawn queue length: ${gameState.spawnQueue.length}`);
+    // IMPORTANTE: Inicializar timer para que spawnee inmediatamente
+    gameState.enemySpawnTimer = GAME_CONFIG.enemySpawnIntervalBase;
+    
+    console.log(`[GAME] Wave ${waveNumber} started: ${total} enemies (${numType1} T1, ${numType2} T2, ${numType3} T3, ${numDevils} Devils)`);
+    console.log(`[GAME] Spawn queue length: ${gameState.spawnQueue.length}`);
+  }
 }
 
 function maybeSpawnDrops(x, y) {
@@ -382,7 +412,19 @@ function updateGame(dt) {
         
         playerData.ammo -= 1;
         playerData.timeSinceLastShot = 0;
+        
+        // Auto-recarga si se quedó sin balas y tiene munición de reserva
+        if (playerData.ammo === 0 && playerData.reserveAmmo > 0) {
+          playerData.isReloading = true;
+          playerData.reloadTimer = GAME_CONFIG.reloadTime;
+        }
       }
+    }
+    
+    // Auto-recarga si intenta disparar sin balas y tiene munición de reserva
+    if (input.shooting && !playerData.isReloading && playerData.ammo === 0 && playerData.reserveAmmo > 0) {
+      playerData.isReloading = true;
+      playerData.reloadTimer = GAME_CONFIG.reloadTime;
     }
   });
 
@@ -556,7 +598,15 @@ function updateGame(dt) {
   const alivePlayers = Array.from(gameState.players.values()).filter(p => p.health > 0);
   if (alivePlayers.length === 0 && gameState.players.size > 0) {
     gameState.gameOver = true;
+    gameState.gameStarted = false;
+    
+    // Resetear estados de "ready" para que puedan volver a jugar
+    lobbyPlayers.forEach((lobbyPlayer) => {
+      lobbyPlayer.ready = false;
+    });
+    
     io.emit('game_event', { type: 'game_over', score: gameState.score, wave: gameState.currentWave });
+    console.log('[GAME] Game Over - Players returned to lobby');
   }
 }
 
@@ -741,8 +791,13 @@ function checkAllReady() {
 }
 
 function startGame() {
+  console.log('[START] Starting new game...');
+  
   // Iniciar el juego (limpia el estado y prepara la primera oleada)
   initGame();
+  
+  // Resetear el timer del game loop
+  lastTickTime = Date.now();
   
   // LUEGO crear jugadores en el juego desde el lobby
   lobbyPlayers.forEach((lobbyPlayer, socketId) => {

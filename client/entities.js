@@ -105,8 +105,11 @@ class Player {
 
     // Sin balas en el cargador
     if (this.ammo <= 0) {
-      // Sin balas en ninguna parte (revólver seco)
-      if (this.reserveAmmo <= 0 && typeof playOutOfAmmoSound === 'function') {
+      // Auto-recarga si tiene munición de reserva
+      if (this.reserveAmmo > 0) {
+        this.startReload();
+      } else if (typeof playOutOfAmmoSound === 'function') {
+        // Sin balas en ninguna parte (revólver seco)
         playOutOfAmmoSound();
       }
       this.timeSinceLastShot = 0;
@@ -130,6 +133,11 @@ class Player {
     // 🔊 sonido del disparo (sin lag, con overlap)
     if (typeof playShootSound === 'function') {
       playShootSound();
+    }
+    
+    // Auto-recarga si se quedó sin balas y tiene munición de reserva
+    if (this.ammo === 0 && this.reserveAmmo > 0) {
+      this.startReload();
     }
   }
 

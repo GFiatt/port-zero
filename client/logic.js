@@ -20,6 +20,11 @@ function resetGame() {
     hasPlayedDeathSound = false;
   }
 
+  // Limpiar mensaje de GAME OVER
+  if (typeof bigMessage !== 'undefined') {
+    bigMessage = null;
+  }
+
   spawnWave(currentWave);
   currentState = GAME_STATE.PLAYING;
 }
@@ -67,12 +72,24 @@ function spawnWave(waveNumber) {
   // TYPE1: lo que quede
   const numType1 = remaining;
 
-  // Vaciar cola y llenarla con los enemigos de esta wave
-  spawnQueue = [];
-  spawnEnemiesOfType(ENEMY_TYPES.TYPE1, numType1);
-  spawnEnemiesOfType(ENEMY_TYPES.TYPE2, numType2);
-  spawnEnemiesOfType(ENEMY_TYPES.TYPE3, numType3);
-  spawnEnemiesOfType(ENEMY_TYPES.DEVIL, numDevils);
+  // En la ronda 1, spawnear todos los enemigos inmediatamente
+  if (waveNumber === 1) {
+    spawnQueue = [];
+    enemies = [];
+    // Spawnear todos los enemigos de tipo 1 inmediatamente
+    for (let i = 0; i < numType1; i++) {
+      const { x, y } = getRandomEdgeSpawn();
+      enemies.push(new Enemy(x, y, ENEMY_TYPES.TYPE1));
+    }
+    console.log(`[GAME] Wave 1 started: ${numType1} enemies spawned immediately`);
+  } else {
+    // Rondas 2+: spawn progresivo como antes
+    spawnQueue = [];
+    spawnEnemiesOfType(ENEMY_TYPES.TYPE1, numType1);
+    spawnEnemiesOfType(ENEMY_TYPES.TYPE2, numType2);
+    spawnEnemiesOfType(ENEMY_TYPES.TYPE3, numType3);
+    spawnEnemiesOfType(ENEMY_TYPES.DEVIL, numDevils);
+  }
 
   enemySpawnTimer = 0;
 }

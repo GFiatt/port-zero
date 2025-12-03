@@ -13,6 +13,7 @@ let inputSendInterval = null;
 let prevBulletCount = 0;
 let prevLocalPlayerHealth = 100;
 let hasPlayedGameOverSounds = false;
+let isLocalPlayerDead = false; // Flag para detectar si el jugador local murió
 
 // ----------------------------------------
 // Inicializar conexión con el servidor
@@ -114,6 +115,8 @@ function setupNetworkListeners() {
         // Detectar transición de vivo a muerto
         if (prevLocalPlayerHealth > 0 && localPlayer.health <= 0) {
           console.log('[AUDIO] Local player died, playing death yell');
+          isLocalPlayerDead = true; // Marcar como muerto para detener inputs
+          
           if (typeof stopMainSong === 'function') {
             stopMainSong();
           }
@@ -252,12 +255,18 @@ function setupNetworkListeners() {
       currentState = GAME_STATE.PLAYING;
     }
     
-    // Resetear flags de audio
+    // Resetear flags de audio y estado del jugador
     hasPlayedGameOverSounds = false;
     prevBulletCount = 0;
     prevLocalPlayerHealth = 100;
+    isLocalPlayerDead = false;
     window.prevLocalReserveAmmo = undefined;
     window.prevLocalHealthForPickup = undefined;
+    
+    // Limpiar mensaje de GAME OVER
+    if (typeof bigMessage !== 'undefined') {
+      bigMessage = null;
+    }
     
     // Iniciar música de fondo
     if (typeof playMainSong === 'function') {
@@ -312,7 +321,7 @@ function startSendingInputs() {
   const sendRateMs = 1000 / rate;
 
   inputSendInterval = setInterval(() => {
-    if (!isConnected || !gameStarted) return;
+    if (!isConnected || !gameStarted || isLocalPlayerDead) return;
 
     const safeKeys = typeof keys !== 'undefined' ? { ...keys } : {};
     const safeMousePos =
@@ -379,7 +388,7 @@ function toggleReady() {
 }
 
 function sendReload() {
-  if (!socket || !isConnected || !gameStarted) return;
+  if (!socket || !isConnected || !gameStarted || isLocalPlayerDead) return;
   socket.emit('player_reload');
 }
 

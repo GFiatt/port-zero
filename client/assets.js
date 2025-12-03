@@ -6,6 +6,7 @@ let enemy1SpriteImage = null;
 let enemy2SpriteImage = null;
 let enemy3SpriteImage = null;
 let enemyDevilSpriteImage = null;
+let bloodSpriteImage = null;
 let shootSoundPool = [];
 const SHOOT_POOL_SIZE = 8; // cuántos disparos pueden sonar casi a la vez
 let mainSongAudio = null;
@@ -130,6 +131,28 @@ function loadEnemyDevilSprite() {
   });
 }
 
+function loadBloodSprite() {
+  return new Promise((resolve, reject) => {
+    const cfg = SPRITE_CONFIG.blood;
+    if (!cfg || !cfg.src) {
+      console.error('SPRITE_CONFIG.blood no está definido');
+      resolve();
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      bloodSpriteImage = img;
+      resolve();
+    };
+    img.onerror = (err) => {
+      console.error('Error loading blood sprite from', cfg.src, err);
+      reject(err);
+    };
+    img.src = cfg.src;
+  });
+}
+
 // API pública para main.js
 function loadAssets() {
   console.log('[ASSETS] Starting to load all assets...');
@@ -139,6 +162,7 @@ function loadAssets() {
     loadEnemy2Sprite(),
     loadEnemy3Sprite(),
     loadEnemyDevilSprite(),
+    loadBloodSprite(),
     loadShootSound(),
     loadMainSong(),
     loadHealSound(),
